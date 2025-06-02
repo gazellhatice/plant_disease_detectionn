@@ -1,0 +1,21 @@
+# Sanal ortamlar
+venv/
+__pycache__/
+*.pyc
+
+# Derlenmiş modeller
+*.pt
+*.tflite
+*.h5
+
+# Geçici dosyalar / loglar / uploadlar
+logs/
+uploads/
+*.log
+
+# IDE klasörleri
+.vscode/
+.idea/
+
+# Jupyter/IPython
+.ipynb_checkpoints/

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitki Hastalıklarının Tespiti</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .navbar {
+            background-color: #28a745;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 24px;
+        }
+        .navbar-nav .nav-link {
+            color: white !important;
+            font-weight: 500;
+        }
+        .navbar-nav .nav-link:hover {
+            color: #d4edda !important;
+        }
+        .hero-section {
+            background: linear-gradient(rgba(40, 167, 69, 0.8), rgba(40, 167, 69, 0.8)), url('https://via.placeholder.com/1500x600');
+            background-size: cover;
+            background-position: center;
+            padding: 60px 20px;
+            color: white;
+            text-align: center;
+        }
+        .hero-section h1 {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .hero-section p {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            gap: 10px;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .search-container input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        .search-container button {
+            width: 100%;
+            padding: 12px;
+            background-color: #218838;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .search-container button:hover {
+            background-color: #1e7e34;
+        }
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #28a745;
+        }
+        .card-text {
+            font-size: 16px;
+            color: #555;
+        }
+        .footer {
+            background-color: #28a745;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .footer p {
+            margin: 0;
+            font-size: 14px;
+        }
+        .disease-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .disease-list li {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .disease-list li:last-child {
+            border-bottom: none;
+        }
+        .result-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-top: 20px;
+            position: relative;
+        }
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            color: #ff4d4d;
+        }
+        .close-btn:hover {
+            color: #cc0000;
+        }
+        .result-content {
+            margin-top: 10px;
+        }
+        .result-content h5 {
+            font-size: 22px;
+            font-weight: bold;
+            color: #28a745;
+            margin-bottom: 10px;
+        }
+        .result-content p {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 0;
+        }
+
+        /* Mobile-specific styles */
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 40px 15px;
+            }
+            .hero-section h1 {
+                font-size: 28px;
+            }
+            .hero-section p {
+                font-size: 14px;
+            }
+            .search-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .search-container input, .search-container button {
+                width: 100%;
+            }
+            .card {
+                margin-bottom: 15px;
+            }
+            .result-card {
+                padding: 15px;
+            }
+            .result-content h5 {
+                font-size: 20px;
+            }
+            .result-content p {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">Plant AI</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('about') }}">About</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="container">
+            <h1>Yapay Zeka Destekli Bitki Hastalıklarının Tespiti</h1>
+            <p>Bir görüntü yükleyin veya bitki hastalıklarını anında tespit etmek için canlı algılamayı kullanın.</p>
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Enter disease name...">
+                <button onclick="searchDisease()"><i class="fas fa-search"></i> Search</button>
+            </div>
+            <!-- Results will appear here -->
+            <div id="results" class="container mt-3"></div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <div class="container mt-5">
+        <div class="row g-4">
+            <!-- AI Detection Section -->
+            <div class="col-md-6">
+                <div class="card p-4 text-center">
+                    <h2 class="mb-4">Yapay Zeka ile Bitki Hastalıklarını Tespit Edin</h2>
+                    <div class="d-grid gap-3 col-8 mx-auto">
+                        <a href="{{ url_for('upload_file') }}" class="btn btn-success btn-lg"><i class="fas fa-upload"></i> Resim Yükle</a>
+                        <a href="{{ url_for('live_page') }}" class="btn btn-success btn-lg"><i class="fas fa-camera"></i> Canlı Algılama</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disease List -->
+            <div class="col-md-6">
+                <div class="card p-4">
+                    <h4 class="text-center mb-4">Yaygın Bitki Hastalıkları</h4>
+                    <ul class="list-group disease-list">
+                        <li class="list-group-item">Apple Scab - <em>Malus domestica</em></li>
+                        <li class="list-group-item">Apple Black Rot - <em>Malus domestica</em></li>
+                        <li class="list-group-item">Apple Cedar Apple Rust - <em>Malus domestica</em></li>
+                        <li class="list-group-item">Apple Healthy - <em>Malus domestica</em></li>
+                        <li class="list-group-item">Blueberry Healthy - <em>Vaccinium corymbosum</em></li>
+                        <li class="list-group-item">Cherry Powdery Mildew - <em>Prunus avium</em></li>
+                        <li class="list-group-item">Cherry Healthy - <em>Prunus avium</em></li>
+                        <li class="list-group-item">Corn Gray Leaf Spot - <em>Zea mays</em></li>
+                        <li class="list-group-item">Corn Common Rust - <em>Zea mays</em></li>
+                        <li class="list-group-item">Corn Northern Leaf Blight - <em>Zea mays</em></li>
+                        <li class="list-group-item">Corn Healthy - <em>Zea mays</em></li>
+                        <li class="list-group-item">Grape Black Rot - <em>Vitis vinifera</em></li>
+                        <li class="list-group-item">Grape Healthy - <em>Vitis vinifera</em></li>
+                        <li class="list-group-item">Orange Huanglongbing - <em>Citrus spp.</em></li>
+                        <li class="list-group-item">Peach Bacterial Spot - <em>Prunus persica</em></li>
+                        <li class="list-group-item">Peach Healthy - <em>Prunus persica</em></li>
+                        <li class="list-group-item">Potato Early Blight - <em>Solanum tuberosum</em></li>
+                        <li class="list-group-item">Potato Late Blight - <em>Solanum tuberosum</em></li>
+                        <li class="list-group-item">Tomato Bacterial Spot - <em>Solanum lycopersicum</em></li>
+                        <li class="list-group-item">Tomato Early Blight - <em>Solanum lycopersicum</em></li>
+                        <li class="list-group-item">Tomato Late Blight - <em>Solanum lycopersicum</em></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>© 2025 Bitki AI Tespiti | Built with ❤️ using AI & Bootstrap</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        const apiKey = "AIzaSyDwcgpwkYmpO7RELsxAXH_YeE-EOW1ipvk"; // Replace with your actual API key
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`;
+        async function searchDisease() {
+            let disease = document.getElementById("searchInput").value.trim();
+            if (disease === "") {
+                alert("Please enter a disease name!");
+                return;
+            }
+
+            // Show loading message
+            let resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = `<div class="text-center"><strong>Searching...</strong></div>`;
+
+            const requestData = {
+                contents: [{ parts: [{ text: `Tell me about the disease: ${disease}` }] }]
+            };
+
+            try {
+                const response = await fetch(apiUrl, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(requestData)
+                });
+
+                const data = await response.json();
+                console.log(data);
+
+                if (data.candidates && data.candidates.length > 0) {
+                    let diseaseInfo = data.candidates[0].content.parts[0].text;
+                    displayResult(disease, diseaseInfo);
+                } else {
+                    displayResult(disease, "No results found!");
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                displayResult(disease, "Error retrieving data. Check your API key and internet connection.");
+            }
+        }
+
+        function displayResult(disease, info) {
+            let resultsDiv = document.getElementById("results");
+
+            // Create a result card
+            let card = document.createElement("div");
+            card.classList.add("result-card");
+            card.innerHTML = `
+                <span class="close-btn" onclick="this.parentElement.remove()">×</span>
+                <div class="result-content">
+                    <h5>${disease}</h5>
+                    <p>${info}</p>
+                </div>
+            `;
+
+            // Clear previous results and append the new card
+            resultsDiv.innerHTML = "";
+            resultsDiv.appendChild(card);
+        }
+    </script>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

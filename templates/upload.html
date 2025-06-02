@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Bitki Hastalıklarının Tespiti</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+      body {
+        background-color: #eef2f3;
+        font-family: "Arial", sans-serif;
+      }
+      .container {
+        max-width: 600px;
+        margin-top: 50px;
+      }
+      .card {
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        background: white;
+      }
+      .btn-custom {
+        font-size: 16px;
+        transition: all 0.3s;
+      }
+      .btn-custom:hover {
+        transform: scale(1.05);
+      }
+      .result-box img {
+        max-width: 100%;
+        max-height: 300px;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="card text-center">
+        <h2 class="text-success">🌿 Bitki Hastalıklarının Tespiti</h2>
+
+        <a
+          href="{{ url_for('home') }}"
+          class="btn btn-outline-secondary w-100 mt-3"
+          >🏠 Home</a
+        >
+        <a
+          href="{{ url_for('live_page') }}"
+          class="btn btn-outline-info w-100 mt-2"
+          >📷 Live Detection</a
+        >
+
+        <form
+          action="/upload"
+          method="POST"
+          enctype="multipart/form-data"
+          class="mt-4"
+        >
+          <label class="form-label"
+            ><strong>Bitki yaprağı resmi yükle:</strong></label
+          >
+          <input
+            type="file"
+            name="file"
+            id="file"
+            class="form-control"
+            required
+          />
+          <button
+            type="submit"
+            class="btn btn-outline-primary w-100 mt-3 btn-custom"
+          >
+            📤 Predict
+          </button>
+        </form>
+      </div>
+
+      {% if filename %}
+      <div class="card mt-4 result-box">
+        <h3>Prediction Result</h3>
+        <p>
+          <strong>🦠 Disease Detected:</strong>
+          <span id="prediction">{{ prediction }}</span>
+        </p>
+        <p>
+          <strong>📊 Confidence Score:</strong> {{ confidence | round(2)*100 }}%
+        </p>
+
+        <!-- Hidden input to store original advice text -->
+        <input type="hidden" id="originalAdvice" value="{{ advice }}" />
+
+        <label class="form-label"><strong>🌍 Select Language:</strong></label>
+        <select
+          id="languageSelect"
+          class="form-select"
+          onchange="translateAdvice()"
+        >
+          <option value="tr">Türkçe</option>
+          <option value="en">English</option>
+          <option value="hi">Hindi</option>
+          <option value="ta">Tamil</option>
+          <option value="te">Telugu</option>
+          <option value="bn">Bengali</option>
+          <option value="mr">Marathi</option>
+          <option value="gu">Gujarati</option>
+          <option value="kn">Kannada</option>
+          <option value="ml">Malayalam</option>
+        </select>
+
+        <div class="mt-3">
+          <h4>🌱 Prevention & Treatment Advice:</h4>
+          <!-- Display translated advice here -->
+          <ul id="adviceText">
+            {% for tip in advice.split('. ') %} {% if tip.strip() %}
+            <li>{{ tip.strip() }}.</li>
+            {% endif %} {% endfor %}
+          </ul>
+        </div>
+
+        <button
+          class="btn btn-outline-warning w-100 mt-3 btn-custom"
+          id="speakButton"
+        >
+          🔊 Listen
+        </button>
+        <button
+          class="btn btn-outline-danger w-100 mt-2 btn-custom"
+          id="stopButton"
+        >
+          🛑 Stop Speech
+        </button>
+        <form
+          id="pdfForm"
+          method="POST"
+          action="/download_report"
+          target="_blank"
+        >
+          <input type="hidden" name="filename" value="{{ filename }}" />
+          <input
+            type="hidden"
+            name="prediction"
+            id="pdfPrediction"
+            value="{{ prediction }}"
+          />
+          <input
+            type="hidden"
+            name="confidence"
+            id="pdfConfidence"
+            value="{{ confidence }}"
+          />
+          <input
+            type="hidden"
+            name="advice"
+            id="pdfAdvice"
+            value="{{ advice }}"
+          />
+          <button
+            type="submit"
+            class="btn btn-outline-secondary w-100 mt-2 btn-custom"
+          >
+            📄 PDF Report
+          </button>
+        </form>
+
+        <img
+          src="{{ url_for('static', filename='uploads/' + filename) }}"
+          alt="Uploaded Image"
+          class="mt-3"
+        />
+      </div>
+      {% endif %}
+    </div>
+
+    <script>
+      let speechInstance = null;
+
+      // Function to translate advice text
+      function translateAdvice() {
+        const language = document.getElementById("languageSelect").value;
+        const originalAdvice = document.getElementById("originalAdvice").value;
+
+        if (language === "en") {
+          // If English, display the original advice
+          const adviceList = originalAdvice
+            .split(". ")
+            .filter((tip) => tip.trim());
+          const adviceHTML = adviceList
+            .map((tip) => `<li>${tip}.</li>`)
+            .join("");
+          document.getElementById("adviceText").innerHTML = adviceHTML;
+          return;
+        }
+
+        // Translate the advice text
+        axios
+          .get(
+            `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=${language}&dt=t&q=${encodeURIComponent(
+              originalAdvice
+            )}`
+          )
+          .then((response) => {
+            const translatedText = response.data[0]
+              .map((item) => item[0])
+              .join(" ");
+            const translatedList = translatedText
+              .split(". ")
+              .filter((tip) => tip.trim());
+            const adviceHTML = translatedList
+              .map((tip) => `<li>${tip}.</li>`)
+              .join("");
+            document.getElementById("adviceText").innerHTML = adviceHTML;
+          })
+          .catch((error) => {
+            console.error("Translation Error: ", error);
+          });
+      }
+
+      // Function to speak the advice text
+      document
+        .getElementById("speakButton")
+        .addEventListener("click", function () {
+          const language = document.getElementById("languageSelect").value;
+          const adviceText = Array.from(
+            document.getElementById("adviceText").getElementsByTagName("li")
+          )
+            .map((li) => li.textContent.trim())
+            .join(" ");
+          speakAdvice(adviceText, language);
+        });
+
+      // Function to stop speech
+      document
+        .getElementById("stopButton")
+        .addEventListener("click", function () {
+          stopSpeech();
+        });
+
+      // PDF form gönderilmeden önce güncelle
+      document
+        .getElementById("pdfForm")
+        .addEventListener("submit", function (e) {
+          const adviceList = Array.from(
+            document.getElementById("adviceText").getElementsByTagName("li")
+          ).map((li) => li.textContent.trim());
+          const joinedAdvice = adviceList.join(". ");
+          document.getElementById("pdfAdvice").value = joinedAdvice;
+
+          // (İsteğe bağlı) dil seçimini ayrı alanla göndermek istiyorsan:
+          const selectedLang = document.getElementById("languageSelect").value;
+          // e.g., form'a yeni input ekleyebilirsin:
+          let langInput = document.getElementById("pdfLang");
+          if (!langInput) {
+            langInput = document.createElement("input");
+            langInput.type = "hidden";
+            langInput.name = "language";
+            langInput.id = "pdfLang";
+            document.getElementById("pdfForm").appendChild(langInput);
+          }
+          langInput.value = selectedLang;
+        });
+
+      // Function to speak the advice
+      function speakAdvice(adviceText, language) {
+        if ("speechSynthesis" in window) {
+          stopSpeech();
+
+          speechInstance = new SpeechSynthesisUtterance(adviceText);
+          speechInstance.lang = language;
+          speechInstance.rate = 0.9;
+          speechInstance.pitch = 1;
+          speechInstance.volume = 1;
+          window.speechSynthesis.speak(speechInstance);
+        } else {
+          alert("Text-to-speech is not supported in your browser.");
+        }
+      }
+
+      // Function to stop speech
+      function stopSpeech() {
+        if (window.speechSynthesis.speaking) {
+          window.speechSynthesis.cancel();
+          console.log("Speech stopped.");
+        }
+      }
+
+      // Function to download PDF
+
+      function downloadPDF() {
+        const prediction = document
+          .getElementById("prediction")
+          .textContent.trim();
+        const confidence = "{{ confidence }}";
+        const adviceText = Array.from(
+          document.getElementById("adviceText").getElementsByTagName("li")
+        )
+          .map((li) => li.textContent.trim())
+          .join(". ");
+        const language = document.getElementById("languageSelect").value;
+
+        // Pass the selected language to the backend
+        window.location.href = `/download_pdf/${encodeURIComponent(
+          prediction
+        )}/${encodeURIComponent(confidence)}/${encodeURIComponent(
+          adviceText
+        )}/${language}`;
+      }
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
