@@ -19,3 +19,7 @@ uploads/
 
 # Jupyter/IPython
 .ipynb_checkpoints/
+
+__pycache__/
+dataset/
+static/pdf_reports/
